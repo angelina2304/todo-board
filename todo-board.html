@@ -1,0 +1,584 @@
+
+<style>
+  :root{
+    --bg:#1B1F2A;
+    --surface:#242938;
+    --surface-2:#2C3243;
+    --accent:#E3B23C;
+    --accent-2:#5FA8D3;
+    --text:#EDEFF3;
+    --muted:#9AA3B2;
+    --danger:#D3675F;
+    --ok:#6FB98F;
+    --border:#39405433;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  * { box-sizing: border-box; }
+  #board-root{
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px 16px 40px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  .board-header{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .board-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:-0.01em;
+  }
+  .board-sub{
+    color: var(--muted);
+    font-size:13px;
+  }
+
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+  }
+  .search-box{
+    flex:1;
+    min-width:140px;
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:9px 12px;
+    color:var(--text);
+    font-size:14px;
+  }
+  .search-box::placeholder{ color: var(--muted); }
+  select.sort-select{
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:9px 10px;
+    color:var(--text);
+    font-size:13px;
+  }
+  .chip{
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-size:12.5px;
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+  }
+  .chip.active{
+    background: var(--accent);
+    color:#1B1F2A;
+    border-color: var(--accent);
+    font-weight:600;
+  }
+  .chip-row{ display:flex; gap:6px; flex-wrap:wrap; }
+
+  .columns{
+    display:flex;
+    gap:14px;
+    overflow-x:auto;
+    padding-bottom:8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .column{
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    min-width:250px;
+    max-width:270px;
+    flex:0 0 auto;
+    display:flex;
+    flex-direction:column;
+    max-height:78vh;
+  }
+  .column-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 12px 8px;
+  }
+  .column-name-wrap{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+  }
+  .col-dot{
+    width:9px;height:9px;border-radius:50%;
+    flex-shrink:0;
+  }
+  .column-name{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .column-count{
+    color:var(--muted);
+    font-size:12px;
+    background: var(--surface-2);
+    padding:1px 7px;
+    border-radius:8px;
+  }
+  .col-del{
+    background:none;border:none;color:var(--muted);
+    cursor:pointer; font-size:15px; padding:2px 4px;
+    line-height:1;
+  }
+  .col-del:hover{ color: var(--danger); }
+
+  .task-list{
+    padding:4px 10px 10px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    overflow-y:auto;
+  }
+  .task-card{
+    background: var(--surface-2);
+    border-radius:10px;
+    padding:10px 11px;
+    border-left:3px solid var(--accent-2);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .task-card.pri-high{ border-left-color: var(--danger); }
+  .task-card.pri-medium{ border-left-color: var(--accent); }
+  .task-card.pri-low{ border-left-color: var(--ok); }
+
+  .task-title{ font-size:13.5px; font-weight:500; line-height:1.35; }
+  .task-meta{
+    display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+  }
+  .tag-pill{
+    font-size:11px; color: var(--accent-2);
+    background:#5fa8d31a; padding:2px 8px; border-radius:999px;
+  }
+  .deadline-pill{
+    font-size:11px; color: var(--muted);
+  }
+  .deadline-pill.overdue{ color: var(--danger); }
+  .task-row-actions{
+    display:flex; justify-content:space-between; align-items:center; margin-top:2px;
+  }
+  select.move-select{
+    background:transparent; border:1px solid var(--border); color:var(--muted);
+    font-size:11px; border-radius:6px; padding:2px 4px; max-width:110px;
+  }
+  .task-del{
+    background:none;border:none;color:var(--muted); cursor:pointer; font-size:13px;
+  }
+  .task-del:hover{ color:var(--danger); }
+
+  .add-task-btn{
+    margin:0 10px 10px;
+    background:transparent;
+    border:1px dashed var(--border);
+    color: var(--muted);
+    border-radius:10px;
+    padding:8px;
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  .add-task-btn:hover{ border-color: var(--accent-2); color: var(--accent-2); }
+
+  .add-column{
+    min-width:210px;
+    flex:0 0 auto;
+    border:1px dashed var(--border);
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color: var(--muted);
+    cursor:pointer;
+    font-size:13px;
+    padding:20px 10px;
+  }
+  .add-column:hover{ color: var(--accent); border-color: var(--accent); }
+
+  .overlay{
+    position:fixed; inset:0; background:#00000080;
+    display:flex; align-items:flex-end; justify-content:center;
+    z-index:50;
+  }
+  .modal{
+    background: var(--surface);
+    border-radius:16px 16px 0 0;
+    padding:18px 18px 22px;
+    width:100%; max-width:420px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .modal-title{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:16px; }
+  .field-label{ font-size:12px; color: var(--muted); margin-bottom:2px; }
+  .field{
+    background: var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:9px 10px;
+    color: var(--text);
+    font-size:14px;
+    width:100%;
+  }
+  .field-row{ display:flex; gap:8px; }
+  .field-row > div{ flex:1; }
+  .modal-actions{ display:flex; gap:8px; margin-top:6px; }
+  .btn{
+    flex:1; padding:10px; border-radius:9px; border:none;
+    font-size:14px; font-weight:600; cursor:pointer;
+  }
+  .btn-primary{ background: var(--accent); color:#1B1F2A; }
+  .btn-secondary{ background: var(--surface-2); color: var(--muted); }
+  .color-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .color-dot-pick{
+    width:22px;height:22px;border-radius:50%;cursor:pointer;
+    border:2px solid transparent;
+  }
+  .color-dot-pick.selected{ border-color: var(--text); }
+  .empty-note{ color: var(--muted); font-size:12.5px; padding:8px 12px 14px; }
+</style>
+
+<div id="board-root"></div>
+
+<script>
+(function(){
+  const COL_COLORS = ['#E3B23C','#5FA8D3','#6FB98F','#D3675F','#B58CE0','#5CC7C7'];
+  const STORAGE_KEY = 'todo-board-data';
+  const root = document.getElementById('board-root');
+
+  let state = {
+    columns: [
+      { id: 'col-todo', name: 'До зробити', color: COL_COLORS[1] },
+      { id: 'col-progress', name: 'В роботі', color: COL_COLORS[0] },
+      { id: 'col-done', name: 'Готово', color: COL_COLORS[2] },
+    ],
+    tasks: []
+  };
+
+  let ui = {
+    search: '',
+    sortBy: 'created',
+    filterTag: null,
+    filterPriority: null,
+    loading: true
+  };
+
+  async function loadState(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, true);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        if(parsed && parsed.columns && parsed.tasks){ state = parsed; }
+      }
+    }catch(e){ /* no data yet */ }
+    ui.loading = false;
+    render();
+  }
+
+  async function saveState(){
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
+    }catch(e){ console.error('Storage save failed', e); }
+  }
+
+  function uid(prefix){ return prefix + '-' + Math.random().toString(36).slice(2,9); }
+
+  function allTags(){
+    const s = new Set();
+    state.tasks.forEach(t => { if(t.tag) s.add(t.tag); });
+    return Array.from(s);
+  }
+
+  function priorityRank(p){ return p === 'high' ? 0 : p === 'medium' ? 1 : 2; }
+
+  function visibleTasksForColumn(colId){
+    let list = state.tasks.filter(t => t.columnId === colId);
+    if(ui.search.trim()){
+      const q = ui.search.trim().toLowerCase();
+      list = list.filter(t =>
+        t.title.toLowerCase().includes(q) ||
+        (t.tag && t.tag.toLowerCase().includes(q))
+      );
+    }
+    if(ui.filterTag){ list = list.filter(t => t.tag === ui.filterTag); }
+    if(ui.filterPriority){ list = list.filter(t => t.priority === ui.filterPriority); }
+
+    list = list.slice().sort((a,b) => {
+      if(ui.sortBy === 'deadline'){
+        if(!a.deadline && !b.deadline) return 0;
+        if(!a.deadline) return 1;
+        if(!b.deadline) return -1;
+        return a.deadline.localeCompare(b.deadline);
+      }
+      if(ui.sortBy === 'priority'){
+        return priorityRank(a.priority) - priorityRank(b.priority);
+      }
+      return a.createdAt - b.createdAt;
+    });
+    return list;
+  }
+
+  function isOverdue(dateStr){
+    if(!dateStr) return false;
+    const today = new Date(); today.setHours(0,0,0,0);
+    return new Date(dateStr) < today;
+  }
+
+  function fmtDate(dateStr){
+    if(!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('uk-UA', { day:'2-digit', month:'short' });
+  }
+
+  // ---- Modal state ----
+  let modal = null; // { type: 'addColumn' | 'addTask', columnId }
+
+  function openAddColumn(){ modal = { type:'addColumn' }; render(); }
+  function openAddTask(columnId){ modal = { type:'addTask', columnId }; render(); }
+  function closeModal(){ modal = null; render(); }
+
+  function submitAddColumn(name, color){
+    if(!name.trim()) return;
+    state.columns.push({ id: uid('col'), name: name.trim(), color });
+    saveState();
+    closeModal();
+  }
+
+  function submitAddTask(columnId, data){
+    if(!data.title.trim()) return;
+    state.tasks.push({
+      id: uid('task'),
+      columnId,
+      title: data.title.trim(),
+      tag: data.tag.trim(),
+      priority: data.priority,
+      deadline: data.deadline,
+      createdAt: Date.now()
+    });
+    saveState();
+    closeModal();
+  }
+
+  function deleteTask(taskId){
+    state.tasks = state.tasks.filter(t => t.id !== taskId);
+    saveState();
+    render();
+  }
+
+  function deleteColumn(colId){
+    state.columns = state.columns.filter(c => c.id !== colId);
+    state.tasks = state.tasks.filter(t => t.columnId !== colId);
+    saveState();
+    render();
+  }
+
+  function moveTask(taskId, newColId){
+    const t = state.tasks.find(t => t.id === taskId);
+    if(t){ t.columnId = newColId; saveState(); render(); }
+  }
+
+  function setSearch(v){ ui.search = v; render(); }
+  function setSort(v){ ui.sortBy = v; render(); }
+  function toggleTagFilter(tag){ ui.filterTag = ui.filterTag === tag ? null : tag; render(); }
+  function togglePriorityFilter(p){ ui.filterPriority = ui.filterPriority === p ? null : p; render(); }
+
+  function el(tag, attrs, children){
+    const e = document.createElement(tag);
+    if(attrs) for(const k in attrs){
+      if(k === 'class') e.className = attrs[k];
+      else if(k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+      else e.setAttribute(k, attrs[k]);
+    }
+    (children||[]).forEach(c => { if(c) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+    return e;
+  }
+
+  function render(){
+    root.innerHTML = '';
+    if(ui.loading){
+      root.appendChild(el('div', {class:'empty-note'}, ['Завантаження...']));
+      return;
+    }
+
+    const header = el('div', {class:'board-header'}, [
+      el('div', {class:'board-title'}, ['Дошка задач']),
+      el('div', {class:'board-sub'}, ['Спільна дошка — зміни бачать усі, хто відкриє цей документ.'])
+    ]);
+
+    const toolbar = el('div', {class:'toolbar'});
+    const searchInput = el('input', {class:'search-box', placeholder:'Пошук за назвою або міткою...'});
+    searchInput.value = ui.search;
+    searchInput.addEventListener('input', e => setSearch(e.target.value));
+    toolbar.appendChild(searchInput);
+
+    const sortSelect = el('select', {class:'sort-select'});
+    [['created','Порядок додавання'],['deadline','За дедлайном'],['priority','За пріоритетом']].forEach(([v,label]) => {
+      const opt = el('option', {value:v}, [label]);
+      if(v === ui.sortBy) opt.setAttribute('selected','selected');
+      sortSelect.appendChild(opt);
+    });
+    sortSelect.addEventListener('change', e => setSort(e.target.value));
+    toolbar.appendChild(sortSelect);
+
+    header.appendChild(toolbar);
+
+    // filter chips: priority + tags
+    const chipRow = el('div', {class:'chip-row'});
+    ['high','medium','low'].forEach(p => {
+      const label = p === 'high' ? 'Високий' : p === 'medium' ? 'Середній' : 'Низький';
+      const chip = el('div', {class:'chip' + (ui.filterPriority===p?' active':'')}, [label]);
+      chip.addEventListener('click', () => togglePriorityFilter(p));
+      chipRow.appendChild(chip);
+    });
+    allTags().forEach(tag => {
+      const chip = el('div', {class:'chip' + (ui.filterTag===tag?' active':'')}, ['#' + tag]);
+      chip.addEventListener('click', () => toggleTagFilter(tag));
+      chipRow.appendChild(chip);
+    });
+    header.appendChild(chipRow);
+
+    root.appendChild(header);
+
+    const columnsWrap = el('div', {class:'columns'});
+    state.columns.forEach(col => {
+      const tasks = visibleTasksForColumn(col.id);
+      const colEl = el('div', {class:'column'});
+      const head = el('div', {class:'column-head'}, [
+        el('div', {class:'column-name-wrap'}, [
+          el('div', {class:'col-dot', style:`background:${col.color}`}),
+          el('div', {class:'column-name'}, [col.name]),
+          el('div', {class:'column-count'}, [String(tasks.length)])
+        ]),
+        el('button', {class:'col-del', onclick: () => { if(confirm('Видалити колонку "'+col.name+'" разом із задачами?')) deleteColumn(col.id); }}, ['✕'])
+      ]);
+      colEl.appendChild(head);
+
+      const list = el('div', {class:'task-list'});
+      if(tasks.length === 0){
+        list.appendChild(el('div', {class:'empty-note'}, ['Немає задач']));
+      }
+      tasks.forEach(t => {
+        const card = el('div', {class:'task-card pri-' + t.priority});
+        card.appendChild(el('div', {class:'task-title'}, [t.title]));
+        const meta = el('div', {class:'task-meta'});
+        if(t.tag) meta.appendChild(el('span', {class:'tag-pill'}, ['#' + t.tag]));
+        if(t.deadline) meta.appendChild(el('span', {class:'deadline-pill' + (isOverdue(t.deadline)?' overdue':'')}, [fmtDate(t.deadline)]));
+        card.appendChild(meta);
+
+        const actions = el('div', {class:'task-row-actions'});
+        const moveSelect = el('select', {class:'move-select'});
+        state.columns.forEach(c => {
+          const opt = el('option', {value:c.id}, [c.name]);
+          if(c.id === col.id) opt.setAttribute('selected','selected');
+          moveSelect.appendChild(opt);
+        });
+        moveSelect.addEventListener('change', e => moveTask(t.id, e.target.value));
+        actions.appendChild(moveSelect);
+        actions.appendChild(el('button', {class:'task-del', onclick: () => deleteTask(t.id)}, ['Видалити']));
+        card.appendChild(actions);
+
+        list.appendChild(card);
+      });
+      colEl.appendChild(list);
+
+      colEl.appendChild(el('button', {class:'add-task-btn', onclick: () => openAddTask(col.id)}, ['+ Додати задачу']));
+      columnsWrap.appendChild(colEl);
+    });
+
+    const addCol = el('div', {class:'add-column', onclick: openAddColumn}, ['+ Нова колонка']);
+    columnsWrap.appendChild(addCol);
+
+    root.appendChild(columnsWrap);
+
+    if(modal){ root.appendChild(renderModal()); }
+  }
+
+  function renderModal(){
+    const overlay = el('div', {class:'overlay', onclick: (e) => { if(e.target === e.currentTarget) closeModal(); }});
+    const box = el('div', {class:'modal'});
+
+    if(modal.type === 'addColumn'){
+      box.appendChild(el('div', {class:'modal-title'}, ['Нова колонка']));
+      box.appendChild(el('div', {class:'field-label'}, ['Назва']));
+      const nameInput = el('input', {class:'field', placeholder:'Напр., На перевірці'});
+      box.appendChild(nameInput);
+      box.appendChild(el('div', {class:'field-label'}, ['Колір мітки']));
+      const colorRow = el('div', {class:'color-row'});
+      let chosenColor = COL_COLORS[0];
+      COL_COLORS.forEach((c,i) => {
+        const dot = el('div', {class:'color-dot-pick' + (i===0?' selected':''), style:`background:${c}`});
+        dot.addEventListener('click', () => {
+          chosenColor = c;
+          colorRow.querySelectorAll('.color-dot-pick').forEach(d => d.classList.remove('selected'));
+          dot.classList.add('selected');
+        });
+        colorRow.appendChild(dot);
+      });
+      box.appendChild(colorRow);
+
+      const actionsRow = el('div', {class:'modal-actions'});
+      actionsRow.appendChild(el('button', {class:'btn btn-secondary', onclick: closeModal}, ['Скасувати']));
+      actionsRow.appendChild(el('button', {class:'btn btn-primary', onclick: () => submitAddColumn(nameInput.value, chosenColor)}, ['Створити']));
+      box.appendChild(actionsRow);
+      setTimeout(() => nameInput.focus(), 50);
+    }
+
+    if(modal.type === 'addTask'){
+      box.appendChild(el('div', {class:'modal-title'}, ['Нова задача']));
+      box.appendChild(el('div', {class:'field-label'}, ['Назва']));
+      const titleInput = el('input', {class:'field', placeholder:'Що потрібно зробити?'});
+      box.appendChild(titleInput);
+
+      box.appendChild(el('div', {class:'field-label'}, ['Мітка (тег)']));
+      const tagInput = el('input', {class:'field', placeholder:'Напр., дизайн, бек, терміново'});
+      box.appendChild(tagInput);
+
+      const row = el('div', {class:'field-row'});
+      const priWrap = el('div');
+      priWrap.appendChild(el('div', {class:'field-label'}, ['Пріоритет']));
+      const priSelect = el('select', {class:'field'});
+      [['medium','Середній'],['high','Високий'],['low','Низький']].forEach(([v,l]) => {
+        priSelect.appendChild(el('option', {value:v}, [l]));
+      });
+      priWrap.appendChild(priSelect);
+      row.appendChild(priWrap);
+
+      const dlWrap = el('div');
+      dlWrap.appendChild(el('div', {class:'field-label'}, ['Дедлайн']));
+      const dlInput = el('input', {class:'field', type:'date'});
+      dlWrap.appendChild(dlInput);
+      row.appendChild(dlWrap);
+      box.appendChild(row);
+
+      const actionsRow = el('div', {class:'modal-actions'});
+      actionsRow.appendChild(el('button', {class:'btn btn-secondary', onclick: closeModal}, ['Скасувати']));
+      actionsRow.appendChild(el('button', {class:'btn btn-primary', onclick: () => submitAddTask(modal.columnId, {
+        title: titleInput.value, tag: tagInput.value, priority: priSelect.value, deadline: dlInput.value
+      })}, ['Додати']));
+      box.appendChild(actionsRow);
+      setTimeout(() => titleInput.focus(), 50);
+    }
+
+    overlay.appendChild(box);
+    return overlay;
+  }
+
+  loadState();
+})();
+</script>
